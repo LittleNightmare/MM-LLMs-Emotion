@@ -1,0 +1,1 @@
+{"commit": null, "eos_token_ids": [248044, 248046], "loaded_parameters": 852985920, "model_class": "Qwen3_5ForConditionalGeneration", "processor_class": "Qwen3VLProcessor"}
