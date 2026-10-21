@@ -5,7 +5,7 @@
 已完成 5 个官方模型在本任务训练前的零样本测试，尚未进行 SFT、RL 或 Kaggle 提交。
 
 - [基线实验](docs/基线实验.md)：数据格式、模型属性、实验设置、指标和结果。
-- [实验记录](results/small-baselines-20261021/)：配置、指标、原始回答、运行日志和权重校验。
+- [实验记录](results/small-baselines-20261021/)：配置、指标、原始回答和运行日志。
 - [推理脚本](scripts/baseline.py)与[环境依赖](requirements-baseline.txt)。
 
 课程数据放在 `Dataset/`，视频、模型权重和运行缓存不提交到仓库。
