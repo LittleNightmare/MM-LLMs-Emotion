@@ -1,0 +1,21 @@
+{
+  "kind": "offline_protocol_composition",
+  "sources": {
+    "VT": {
+      "run": "outputs/small-qwen35-2b-vt",
+      "model_id": "Qwen/Qwen3.5-2B",
+      "predictions_sha256": "4ac0543a68b9dd9deb13f90b245ef3eebd13b434870fed5feda496e6488184b5"
+    },
+    "VA": {
+      "run": "outputs/small-qwen-omni-3b-val",
+      "model_id": "Qwen/Qwen2.5-Omni-3B",
+      "predictions_sha256": "b5303a17f5fd927df91e9a8d2bd9b1d08558cd946000be8bca810e973348dd2f"
+    }
+  },
+  "routing_uses": "protocol only, never gold labels or prediction correctness",
+  "selection_note": "Candidate selected after validation inspection; not an independent held-out estimate",
+  "dataset_sha256": "1a0f1459dc8a1282489df2ac3e0f2b4d897148dbc5d288bd31cabdbbd5c6ef52",
+  "n": 666,
+  "created_at_utc": "2026-10-20T19:35:02.338340+00:00",
+  "script_sha256": "2eb0528739b5e4d95be7ac1f7ae0bc0dfdf151e9b12215a7982b583d5307fc69"
+}

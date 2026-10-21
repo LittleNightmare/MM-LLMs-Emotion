@@ -1,0 +1,173 @@
+{
+  "all": {
+    "n": 345,
+    "emotion_accuracy": 0.4608695652173913,
+    "emotion_macro_f1_fixed3": 0.36199280945043655,
+    "emotion_macro_f1_present": 0.5429892141756548,
+    "emotion_per_class": {
+      "negative": {
+        "precision": 0.9774436090225563,
+        "recall": 0.5882352941176471,
+        "f1": 0.7344632768361582,
+        "support": 221
+      },
+      "positive": {
+        "precision": 0.7073170731707317,
+        "recall": 0.23387096774193547,
+        "f1": 0.3515151515151515,
+        "support": 124
+      },
+      "neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "conflict_accuracy": 0.034782608695652174,
+    "conflict_f1": 0.05434782608695652,
+    "conflict_precision": 0.041666666666666664,
+    "conflict_recall": 0.078125,
+    "json_valid_rate": 0.336231884057971,
+    "uncertain_rate": 0.0,
+    "error_count": 0
+  },
+  "VT": {
+    "n": 345,
+    "emotion_accuracy": 0.4608695652173913,
+    "emotion_macro_f1_fixed3": 0.36199280945043655,
+    "emotion_macro_f1_present": 0.5429892141756548,
+    "emotion_per_class": {
+      "negative": {
+        "precision": 0.9774436090225563,
+        "recall": 0.5882352941176471,
+        "f1": 0.7344632768361582,
+        "support": 221
+      },
+      "positive": {
+        "precision": 0.7073170731707317,
+        "recall": 0.23387096774193547,
+        "f1": 0.3515151515151515,
+        "support": 124
+      },
+      "neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "conflict_accuracy": 0.034782608695652174,
+    "conflict_f1": 0.05434782608695652,
+    "conflict_precision": 0.041666666666666664,
+    "conflict_recall": 0.078125,
+    "json_valid_rate": 0.336231884057971,
+    "uncertain_rate": 0.0,
+    "error_count": 0
+  },
+  "VA": {
+    "n": 0
+  },
+  "real": {
+    "n": 284,
+    "emotion_accuracy": 0.545774647887324,
+    "emotion_macro_f1_fixed3": 0.40606970446249857,
+    "emotion_macro_f1_present": 0.6091045566937479,
+    "emotion_per_class": {
+      "negative": {
+        "precision": 0.984375,
+        "recall": 0.7159090909090909,
+        "f1": 0.8289473684210527,
+        "support": 176
+      },
+      "positive": {
+        "precision": 0.7073170731707317,
+        "recall": 0.26851851851851855,
+        "f1": 0.38926174496644295,
+        "support": 108
+      },
+      "neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "conflict_accuracy": 0.03873239436619718,
+    "conflict_f1": 0.05755395683453238,
+    "conflict_precision": 0.03361344537815126,
+    "conflict_recall": 0.2,
+    "json_valid_rate": 0.40492957746478875,
+    "uncertain_rate": 0.0,
+    "error_count": 0
+  },
+  "generated": {
+    "n": 61,
+    "emotion_accuracy": 0.06557377049180328,
+    "emotion_macro_f1_fixed3": 0.05333333333333334,
+    "emotion_macro_f1_present": 0.08,
+    "emotion_per_class": {
+      "negative": {
+        "precision": 0.8,
+        "recall": 0.08888888888888889,
+        "f1": 0.16,
+        "support": 45
+      },
+      "positive": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 16
+      },
+      "neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "conflict_accuracy": 0.01639344262295082,
+    "conflict_f1": 0.044444444444444446,
+    "conflict_precision": 1.0,
+    "conflict_recall": 0.022727272727272728,
+    "json_valid_rate": 0.01639344262295082,
+    "uncertain_rate": 0.0,
+    "error_count": 0
+  },
+  "use_in_main": {
+    "n": 318,
+    "emotion_accuracy": 0.46855345911949686,
+    "emotion_macro_f1_fixed3": 0.3655548129696012,
+    "emotion_macro_f1_present": 0.5483322194544018,
+    "emotion_per_class": {
+      "negative": {
+        "precision": 0.9919354838709677,
+        "recall": 0.6059113300492611,
+        "f1": 0.7522935779816514,
+        "support": 203
+      },
+      "positive": {
+        "precision": 0.7222222222222222,
+        "recall": 0.22608695652173913,
+        "f1": 0.3443708609271523,
+        "support": 115
+      },
+      "neutral": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "conflict_accuracy": 0.0220125786163522,
+    "conflict_f1": 0.0125,
+    "conflict_precision": 0.009009009009009009,
+    "conflict_recall": 0.02040816326530612,
+    "json_valid_rate": 0.3333333333333333,
+    "uncertain_rate": 0.0,
+    "error_count": 0
+  },
+  "median_seconds": 1.337,
+  "max_peak_allocated_gib": 1.7167010307312012,
+  "note": "No uncertainty ground truth exists; uncertain_rate is descriptive, not accuracy. Invalid outputs count as errors. Fixed3 macro-F1 includes neutral with zero support."
+}

@@ -1,0 +1,25 @@
+{
+  "model": "qwen-omni-7b",
+  "dataset": "Dataset/val.jsonl",
+  "output": "outputs/qwen7b-val",
+  "model_path": "/model/ModelScope/Qwen/Qwen2.5-Omni-7B",
+  "limit": null,
+  "smoke": false,
+  "frames": 8,
+  "max_side": 448,
+  "max_new_tokens": 192,
+  "model_id": "Qwen/Qwen2.5-Omni-7B",
+  "system_prompt": "你是一个情感识别助手。根据提供的画面和文字或音频，判断说话者的情感。\n情感类别只能是 positive（正向）、negative（负向）、neutral（中性）。\n分别考虑画面和另一种信息的情感是否冲突。冲突不一定意味着无法判断；\n只有证据不足、无法可靠判断时才表达不确定，并提出一个具体的澄清问题。\n只输出一个 JSON 对象，不要解释或 Markdown。字段必须为：\npred_emotion: positive/negative/neutral；\nis_conflict: yes/no；\nis_uncertain: yes/no；\nclarifying_question: 需要澄清时写一个简短中文问题，否则写字符串 none。",
+  "dtype": "bfloat16",
+  "do_sample": false,
+  "seed": 42,
+  "script_sha256": "2698f1d9db021de8f397b617713e0123813b2c07af8a2c3e68552def5aadc690",
+  "dataset_sha256": "1a0f1459dc8a1282489df2ac3e0f2b4d897148dbc5d288bd31cabdbbd5c6ef52",
+  "versions": {
+    "torch": "2.13.0+cu132",
+    "transformers": "5.20.2",
+    "accelerate": "1.15.0",
+    "av": "19.0.1"
+  },
+  "gpu": "NVIDIA GeForce RTX 4090"
+}

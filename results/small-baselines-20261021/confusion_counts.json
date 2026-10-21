@@ -1,0 +1,183 @@
+{
+  "gemma-e2b-val": {
+    "all": {
+      "negative -> __invalid__": 41,
+      "negative -> negative": 222,
+      "negative -> neutral": 108,
+      "negative -> positive": 43,
+      "positive -> __invalid__": 37,
+      "positive -> negative": 8,
+      "positive -> neutral": 33,
+      "positive -> positive": 174
+    },
+    "VT": {
+      "negative -> __invalid__": 27,
+      "negative -> negative": 146,
+      "negative -> neutral": 27,
+      "negative -> positive": 21,
+      "positive -> __invalid__": 23,
+      "positive -> negative": 4,
+      "positive -> neutral": 6,
+      "positive -> positive": 91
+    },
+    "VA": {
+      "negative -> __invalid__": 14,
+      "negative -> negative": 76,
+      "negative -> neutral": 81,
+      "negative -> positive": 22,
+      "positive -> __invalid__": 14,
+      "positive -> negative": 4,
+      "positive -> neutral": 27,
+      "positive -> positive": 83
+    },
+    "VT_raw_emotion_field_diagnostic": {
+      "n": 345,
+      "valid_fields": 295,
+      "correct": 237,
+      "accuracy": 0.6869565217391305,
+      "parser": "\"pred_emotion\"\\s*:\\s*\"(negative|positive|neutral)\""
+    },
+    "format_diagnostics": {
+      "unquoted_none": 0,
+      "boolean_instead_of_yes_no": 0
+    }
+  },
+  "qwen7b-val": {
+    "all": {
+      "negative -> __invalid__": 4,
+      "negative -> negative": 288,
+      "negative -> neutral": 90,
+      "negative -> positive": 32,
+      "positive -> __invalid__": 11,
+      "positive -> negative": 9,
+      "positive -> neutral": 52,
+      "positive -> positive": 180
+    },
+    "VT": {
+      "negative -> negative": 144,
+      "negative -> neutral": 50,
+      "negative -> positive": 27,
+      "positive -> negative": 5,
+      "positive -> neutral": 25,
+      "positive -> positive": 94
+    },
+    "VA": {
+      "negative -> __invalid__": 4,
+      "negative -> negative": 144,
+      "negative -> neutral": 40,
+      "negative -> positive": 5,
+      "positive -> __invalid__": 11,
+      "positive -> negative": 4,
+      "positive -> neutral": 27,
+      "positive -> positive": 86
+    },
+    "VT_raw_emotion_field_diagnostic": {
+      "n": 345,
+      "valid_fields": 345,
+      "correct": 238,
+      "accuracy": 0.6898550724637681,
+      "parser": "\"pred_emotion\"\\s*:\\s*\"(negative|positive|neutral)\""
+    },
+    "format_diagnostics": {
+      "unquoted_none": 0,
+      "boolean_instead_of_yes_no": 0
+    }
+  },
+  "small-qwen35-08b-vt": {
+    "all": {
+      "negative -> __invalid__": 77,
+      "negative -> negative": 130,
+      "negative -> neutral": 2,
+      "negative -> positive": 12,
+      "positive -> __invalid__": 92,
+      "positive -> negative": 3,
+      "positive -> positive": 29
+    },
+    "VT": {
+      "negative -> __invalid__": 77,
+      "negative -> negative": 130,
+      "negative -> neutral": 2,
+      "negative -> positive": 12,
+      "positive -> __invalid__": 92,
+      "positive -> negative": 3,
+      "positive -> positive": 29
+    },
+    "VA": {},
+    "VT_raw_emotion_field_diagnostic": {
+      "n": 345,
+      "valid_fields": 329,
+      "correct": 265,
+      "accuracy": 0.7681159420289855,
+      "parser": "\"pred_emotion\"\\s*:\\s*\"(negative|positive|neutral)\""
+    },
+    "format_diagnostics": {
+      "unquoted_none": 155,
+      "boolean_instead_of_yes_no": 199
+    }
+  },
+  "small-qwen35-2b-vt": {
+    "all": {
+      "negative -> negative": 184,
+      "negative -> neutral": 5,
+      "negative -> positive": 32,
+      "positive -> negative": 16,
+      "positive -> positive": 108
+    },
+    "VT": {
+      "negative -> negative": 184,
+      "negative -> neutral": 5,
+      "negative -> positive": 32,
+      "positive -> negative": 16,
+      "positive -> positive": 108
+    },
+    "VA": {},
+    "VT_raw_emotion_field_diagnostic": {
+      "n": 345,
+      "valid_fields": 345,
+      "correct": 292,
+      "accuracy": 0.8463768115942029,
+      "parser": "\"pred_emotion\"\\s*:\\s*\"(negative|positive|neutral)\""
+    },
+    "format_diagnostics": {
+      "unquoted_none": 0,
+      "boolean_instead_of_yes_no": 0
+    }
+  },
+  "small-qwen-omni-3b-val": {
+    "all": {
+      "negative -> negative": 281,
+      "negative -> neutral": 103,
+      "negative -> positive": 30,
+      "positive -> negative": 7,
+      "positive -> neutral": 74,
+      "positive -> positive": 171
+    },
+    "VT": {
+      "negative -> negative": 149,
+      "negative -> neutral": 45,
+      "negative -> positive": 27,
+      "positive -> negative": 3,
+      "positive -> neutral": 26,
+      "positive -> positive": 95
+    },
+    "VA": {
+      "negative -> negative": 132,
+      "negative -> neutral": 58,
+      "negative -> positive": 3,
+      "positive -> negative": 4,
+      "positive -> neutral": 48,
+      "positive -> positive": 76
+    },
+    "VT_raw_emotion_field_diagnostic": {
+      "n": 345,
+      "valid_fields": 345,
+      "correct": 244,
+      "accuracy": 0.7072463768115942,
+      "parser": "\"pred_emotion\"\\s*:\\s*\"(negative|positive|neutral)\""
+    },
+    "format_diagnostics": {
+      "unquoted_none": 0,
+      "boolean_instead_of_yes_no": 0
+    }
+  }
+}
