@@ -113,6 +113,10 @@ curl -I https://www.kaggle.com && curl -I https://hf-mirror.com && curl -I https
 
 ## 七、训练任务怎么配
 
+开发机是**交互式**的：你自己开着终端敲命令、改代码、看报错，单次最长 7×24 小时，停机后 `/data` 以外的文件全部重置。训练任务是**托管批处理**：把代码来源、启动命令、资源、镜像、数据集和超参数填进去，平台排队调度、跑完释放，你只能看日志和 TensorBoard 曲线；停止后不能续跑，只能「重新训练」，断点续训要靠 `/data` 里的 checkpoint。
+
+一句话分工：调代码、装环境、跑小样本、导出提交用开发机；几小时以上的 SFT/RL 用训练任务，免得开发机掉线或超时。
+
 - 代码来源选“我的云盘”，路径填 `/MM-LLMs-Emotion/repo`，启动命令写 `bash /data/MM-LLMs-Emotion/repo/scripts/xxx.sh`；选 Git 来源时工作目录是临时的 `/code/workspace`。
 - 结果和 checkpoint 必须写 `/data`，任务停止后不能续跑，只能“重新训练”，断点续训靠 `/data` 里的 checkpoint。
 - TensorBoard 日志写到 `TENSORBOARD_LOGDIR` 指定的目录，任务详情页才有曲线。
