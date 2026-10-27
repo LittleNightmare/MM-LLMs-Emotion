@@ -66,14 +66,17 @@ uv 方案保留作备用：驱动比 `cu132` 旧、或者需要临时改依赖�
 
 ## 五、代码和数据怎么来回
 
-云盘上目前放了两样东西：
+**代码优先走 GitHub**：平台能直连 GitHub，也支持选分支，克隆和推送都正常，不用来回打包。云盘只放数据和大件权重。
 
-```
-/assets/course-dataset.tar        1.5 GB   数据，解包就是 Dataset/
-/MM-LLMs-Emotion/mm-code-*.tgz    125 KB   代码，44 个文件
+```bash
+git clone -b docs/data-readiness <repo-url> /data/MM-LLMs-Emotion/repo
+cd /data/MM-LLMs-Emotion/repo
+cp .env.example .env      # .env 不在 git 里，克隆后要自己填 token
 ```
 
-代码用 [scripts/sync_code.py](../scripts/sync_code.py) 打包，默认排除 `Dataset/`、`models/`、`reference/`、`.venv/`、`.git`：
+训练任务的「代码来源」也能直接选 Git 仓库，填仓库地址和分支，平台会拉到 `/code/workspace`；想复用 `/data` 里的环境就选「我的云盘」并指向代码目录。
+
+GitHub 不通时的备选是 [scripts/sync_code.py](../scripts/sync_code.py) 打包上传，云盘上现有的 `mm-code-*.tgz` 就是这条路：
 
 ```bash
 uv run python scripts/sync_code.py pack          # dist/mm-code-<时间>.tgz
