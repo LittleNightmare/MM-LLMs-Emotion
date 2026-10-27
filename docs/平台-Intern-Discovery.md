@@ -24,10 +24,10 @@
 ```
 /data/
 ├── assets/
-│   ├── Dataset/               # 竞赛数据，1.57 GB，只下一次
+│   ├── course-dataset/        # 竞赛数据，1.57 GB，只下一次（故意不叫 Dataset，避免与平台挂载的 /dataset 混淆）
 │   └── models/qwen-omni-3b/   # 基座权重，约 12 GB，只下一次
 ├── MM-LLMs-Emotion/           # 代码，几百 KB，可反复覆盖
-│   ├── Dataset -> /data/assets/Dataset
+│   ├── Dataset -> /data/assets/course-dataset
 │   └── models  -> /data/assets/models
 ├── env/mm-llms-emotion/       # uv 的 venv
 └── runs/                      # 输出、checkpoint
@@ -58,27 +58,34 @@ venv 落在 `/data`，后续开发机和训练任务都能复用同一份，只�
 
 结论：按“只有网页 IDE”准备。开通开发机后先看卡片或“…”菜单里有没有 SSH 相关入口；有的话用本地 VS Code 的 Remote-SSH 填命令即可，没有就一直在浏览器里的 VSCode 终端操作。网页终端能跑的命令和 SSH 完全一样，只是断开连接后本地看不到现场。
 
-## 五、代码怎么来回
+## 五、代码和数据怎么来回
 
-仓库用 [scripts/sync_code.py](../scripts/sync_code.py) 打包，默认排除 `Dataset/`、`models/`、`reference/`、`.venv/`、`.git`，产物约 100 KB：
+云盘上目前放了两样东西：
+
+```
+/assets/course-dataset.tar        1.5 GB   数据，解包就是 Dataset/
+/MM-LLMs-Emotion/mm-code-*.tgz    125 KB   代码，44 个文件
+```
+
+代码用 [scripts/sync_code.py](../scripts/sync_code.py) 打包，默认排除 `Dataset/`、`models/`、`reference/`、`.venv/`、`.git`：
 
 ```bash
 uv run python scripts/sync_code.py pack          # dist/mm-code-<时间>.tgz
 uv run python scripts/sync_code.py upload        # 传到云盘 /MM-LLMs-Emotion/
 ```
 
-机器上解包并接线：
+机器上解包：
 
 ```bash
 mkdir -p /data/MM-LLMs-Emotion/repo
 tar -xzf /data/MM-LLMs-Emotion/mm-code-*.tgz -C /data/MM-LLMs-Emotion/repo
-ln -s /data/assets/Dataset /data/MM-LLMs-Emotion/repo/Dataset
-ln -s /data/assets/models  /data/MM-LLMs-Emotion/repo/models
 ```
+
+数据不用手动处理：`machine_bootstrap.sh` 会把 `/data/assets/course-dataset.tar` 解到 `/data/assets/course-dataset` 并删掉 tar，再软链到仓库的 `Dataset/`。
 
 需要保留 git 历史时用 `pack --with-git`，或者走 `git bundle`：本地 `git bundle create mm.bundle --all`，机器上 `git clone mm.bundle`，回传再 `git fetch`。GitHub 能不能直连还没验证，先按不通准备。
 
-`discovery-ctl` 的安装方式文档里没写；开发机大概率自带（进机器先 `which discovery-ctl`），本地要用得找平台给的下载入口。没有 CLI 时，网页云盘拖拽上传同样可以，只是慢一些。
+`discovery-ctl` 本机已装（v1.2.1，`%LOCALAPPDATA%\discovery\bin\discovery-ctl.exe`，[scripts/sync_code.py](../scripts/sync_code.py) 会自动找到它）；开发机里一般自带。上传大文件时偶发 `HTTP transport failed ... EOF`，原样重试即可。
 
 ## 六、第一次进机先跑这几条
 
@@ -86,11 +93,11 @@ ln -s /data/assets/models  /data/MM-LLMs-Emotion/repo/models
 
 ```bash
 bash -n scripts/machine_bootstrap.sh        # 先语法自检
-bash scripts/machine_bootstrap.sh           # 建目录、接线、装环境、体检
-bash scripts/machine_bootstrap.sh --data --model qwen-omni-3b   # 顺带拉数据和权重
+bash scripts/machine_bootstrap.sh           # 解数据、接线、装环境、体检
+bash scripts/machine_bootstrap.sh --model qwen-omni-3b   # 顺带拉基座权重
 ```
 
-它会做六件事：建 `/data/assets`、`/data/env`、`/data/cache/uv`；把仓库里的 `Dataset/`、`models/` 软链到 assets；装 uv 并 `uv sync`；按需下载数据和权重；最后打印 GPU、驱动、torch、bf16、磁盘和三个网络探测结果。脚本不需要 sudo，可重复执行。
+它会做这几件事：解 `/data/assets/course-dataset.tar`、建 `/data/env` 和 `/data/cache/uv`、把 `Dataset/` 和 `models/` 软链到 assets、装 uv 并 `uv sync`、按需下载权重，最后打印 GPU、驱动、torch、bf16、磁盘和三个网络探测结果。不需要 sudo，可重复执行。
 
 手动检查的话，这些最要紧：
 

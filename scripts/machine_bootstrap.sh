@@ -13,6 +13,7 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 ASSETS="/data/assets"
+DATASET_NAME="course-dataset"
 ENV_DIR="/data/env/mm-llms-emotion"
 UV_CACHE="/data/cache/uv"
 WITH_DATA=0
@@ -21,9 +22,10 @@ MODEL=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --assets) ASSETS="$2"; shift 2 ;;
+    --dataset-name) DATASET_NAME="$2"; shift 2 ;;
     --data) WITH_DATA=1; shift ;;
     --model) MODEL="$2"; shift 2 ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
     *) echo "未知参数: $1"; exit 2 ;;
   esac
 done
@@ -35,20 +37,41 @@ if [ ! -d /data ]; then
 fi
 
 say "1/6 建目录"
-mkdir -p "$ASSETS/Dataset" "$ASSETS/models" "$ENV_DIR" "$(dirname "$UV_CACHE")"
-echo "assets: $ASSETS"
-echo "env:    $ENV_DIR"
+mkdir -p "$ASSETS" "$ENV_DIR" "$(dirname "$UV_CACHE")"
+# 云盘里传的是 course-dataset.tar（1572 MB），第一次跑就顺手解开
+if [ ! -d "$ASSETS/$DATASET_NAME" ] && [ -f "$ASSETS/course-dataset.tar" ]; then
+  echo "发现 $ASSETS/course-dataset.tar，解包中（约 1.5 GB）"
+  tar -xf "$ASSETS/course-dataset.tar" -C "$ASSETS"
+  if [ -d "$ASSETS/Dataset" ]; then
+    mv "$ASSETS/Dataset" "$ASSETS/$DATASET_NAME"
+  fi
+  rm -f "$ASSETS/course-dataset.tar"
+fi
+mkdir -p "$ASSETS/$DATASET_NAME" "$ASSETS/models"
+echo "assets:   $ASSETS"
+echo "dataset:  $ASSETS/$DATASET_NAME"
+echo "env:      $ENV_DIR"
 
 say "2/6 把 Dataset/ 和 models/ 接到 assets"
-for name in Dataset models; do
-  if [ -L "$REPO/$name" ]; then
-    ln -sfn "$ASSETS/$name" "$REPO/$name"
-  elif [ -d "$REPO/$name" ]; then
-    echo "保留已有目录 $REPO/$name（不是软链接，跳过）"
-  else
-    ln -s "$ASSETS/$name" "$REPO/$name"
-  fi
-done
+# 云盘上传时目录名还是 Dataset；第一次跑脚本就顺手改成不和平台 /dataset 混淆的名字。
+if [ ! -d "$ASSETS/$DATASET_NAME" ] && [ -d "$ASSETS/Dataset" ]; then
+  mv "$ASSETS/Dataset" "$ASSETS/$DATASET_NAME"
+  echo "已把 $ASSETS/Dataset 改名为 $ASSETS/$DATASET_NAME"
+fi
+if [ -L "$REPO/Dataset" ]; then
+  ln -sfn "$ASSETS/$DATASET_NAME" "$REPO/Dataset"
+elif [ -d "$REPO/Dataset" ]; then
+  echo "保留已有目录 $REPO/Dataset（不是软链接，跳过）"
+else
+  ln -s "$ASSETS/$DATASET_NAME" "$REPO/Dataset"
+fi
+if [ -L "$REPO/models" ]; then
+  ln -sfn "$ASSETS/models" "$REPO/models"
+elif [ -d "$REPO/models" ]; then
+  echo "保留已有目录 $REPO/models（不是软链接，跳过）"
+else
+  ln -s "$ASSETS/models" "$REPO/models"
+fi
 
 say "3/6 准备 uv"
 export UV_CACHE_DIR="$UV_CACHE"
@@ -98,7 +121,7 @@ done
 
 say "完成"
 echo "仓库:   $REPO"
-echo "数据:   $ASSETS/Dataset"
+echo "数据:   $ASSETS/$DATASET_NAME"
 echo "权重:   $ASSETS/models"
 echo "venv:   $ENV_DIR"
 echo "之后每次进机器都要先: export UV_PROJECT_ENVIRONMENT=$ENV_DIR UV_CACHE_DIR=$UV_CACHE"
