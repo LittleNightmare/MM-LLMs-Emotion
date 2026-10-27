@@ -24,10 +24,11 @@ import time
 from pathlib import Path
 
 SKIP_DIRS = {
-    ".git", ".venv", ".uv-cache", ".uv-python", "__pycache__",
+    ".git", ".venv", ".uv-cache", ".uv-python", "__pycache__", ".agents",
     "Dataset", "models", "outputs", "logs", "evidence", "dist", "reference",
 }
 SKIP_SUFFIXES = {".tgz", ".tar", ".gz", ".pyc", ".zip"}
+SKIP_NAMES = {"skills-lock.json"}
 REMOTE_ROOT = "/MM-LLMs-Emotion"
 
 
@@ -40,7 +41,7 @@ def iter_files(repo, with_git):
             continue
         if any(part in SKIP_DIRS for part in rel.parts[:-1]) or rel.parts[0] in SKIP_DIRS:
             continue
-        if path.suffix in SKIP_SUFFIXES or path.name == ".env":
+        if path.suffix in SKIP_SUFFIXES or path.name in SKIP_NAMES or path.name == ".env":
             continue
         yield path, rel
 
