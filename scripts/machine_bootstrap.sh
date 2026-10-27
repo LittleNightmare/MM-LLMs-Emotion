@@ -59,6 +59,12 @@ if [ ! -d "$ASSETS/$DATASET_NAME" ] && [ -f "$ASSETS/course-dataset.tar" ]; then
   rm -f "$ASSETS/course-dataset.tar"
 fi
 mkdir -p "$ASSETS/$DATASET_NAME" "$ASSETS/models"
+# 模型同样是云盘上的 tar，第一次跑就解开
+if [ ! -d "$ASSETS/models/qwen-omni-3b" ] && [ -f "$ASSETS/models/qwen-omni-3b.tar" ]; then
+  echo "发现 $ASSETS/models/qwen-omni-3b.tar，解包中（约 12 GB）"
+  tar -xf "$ASSETS/models/qwen-omni-3b.tar" -C "$ASSETS/models"
+  rm -f "$ASSETS/models/qwen-omni-3b.tar"
+fi
 echo "assets:   $ASSETS"
 echo "dataset:  $ASSETS/$DATASET_NAME"
 echo "env:      $ENV_DIR"
