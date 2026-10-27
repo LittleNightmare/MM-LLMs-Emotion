@@ -15,6 +15,7 @@ docs/平台-Intern-Discovery.md。
 """
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -63,10 +64,20 @@ def do_pack(args):
 
 def find_ctl():
     exe = shutil.which("discovery-ctl")
-    if not exe:
-        print("找不到 discovery-ctl。开发机里一般自带（which discovery-ctl）；"
-              "本地需要按平台给的安装方式装一次，见 docs/平台-Intern-Discovery.md。")
-    return exe
+    if exe:
+        return exe
+    # 官方安装器默认落在这里，有的 shell 里 PATH 没带上
+    candidates = [
+        Path(os.environ.get("LOCALAPPDATA", "")) / "discovery" / "bin" / "discovery-ctl.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "discovery" / "bin" / "discovery-ctl",
+        Path.home() / ".local" / "bin" / "discovery-ctl",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    print("找不到 discovery-ctl。开发机里一般自带（which discovery-ctl）；"
+          "本地需要按平台给的安装方式装一次，见 docs/平台-Intern-Discovery.md。")
+    return None
 
 
 def do_upload(args):
