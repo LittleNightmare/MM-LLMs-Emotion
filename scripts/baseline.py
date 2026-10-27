@@ -41,6 +41,18 @@ MODELS = {
 }
 
 
+def infer_protocol(row):
+    """测试集没有 protocol 字段：先看 sample_id，再看视频目录。
+
+    ch_sims_v2 的 ID 第二段就是协议；生成片段的 ID 形如 gen:<源>:<编号>，
+    只能按目录判断，video_audio 记 VA，silent_video_text 记 VT。
+    """
+    parts = row["sample_id"].split(":")
+    if len(parts) > 1 and parts[1] in ("VT", "VA"):
+        return parts[1]
+    return "VA" if "/video_audio/" in row["video"] else "VT"
+
+
 def prepare_media(video, cache, frames=8, max_side=448):
     """Uniform frame sampling over the ENTIRE clip; audio kept independently."""
     key = hashlib.sha256(video.read_bytes()).hexdigest()
@@ -115,6 +127,33 @@ def is_json_object(text):
 
 def summarize(records):
     from sklearn.metrics import accuracy_score, f1_score, precision_recall_fscore_support
+
+    if records and "gold_emotion" not in records[0]:
+        # 测试集没有标签，只做描述性统计；不编造准确率。
+        def describe(rows):
+            if not rows:
+                return {"n": 0}
+            return {
+                "n": len(rows),
+                "emotion_counts": {c: sum(r.get("prediction", {}).get("pred_emotion") == c for r in rows) for c in CLASSES},
+                "uncertain_rate": sum(r.get("prediction", {}).get("is_uncertain") == "yes" for r in rows) / len(rows),
+                "question_rate": sum(
+                    isinstance(r.get("prediction", {}).get("clarifying_question"), str)
+                    and r["prediction"]["clarifying_question"] not in ("", "none")
+                    for r in rows) / len(rows),
+                "json_valid_rate": sum(r.get("format_valid", False) for r in rows) / len(rows),
+                "error_count": sum("error" in r for r in rows),
+            }
+
+        return {
+            "all": describe(records),
+            "VT": describe([r for r in records if r["protocol"] == "VT"]),
+            "VA": describe([r for r in records if r["protocol"] == "VA"]),
+            "median_seconds": statistics.median([r["seconds"] for r in records]) if records else None,
+            "max_peak_allocated_gib": max((r.get("peak_allocated_gib", 0) for r in records), default=0),
+            "note": "无标签测试集：只有预测分布和格式统计，没有准确率/Macro-F1。",
+        }
+
     def metric(rows):
         y = [r["gold_emotion"] for r in rows]
         def valid_value(row, key, allowed):
@@ -170,6 +209,7 @@ def main():
     parser.add_argument("--max-side", type=int, default=448)
     parser.add_argument("--max-new-tokens", type=int, default=192)
     parser.add_argument("--media-cache", default="outputs/media_cache")
+    parser.add_argument("--dry-run", action="store_true", help="只检查数据与协议推断，不加载模型")
     args = parser.parse_args()
     visual_only = args.model.startswith("qwen35")
     if visual_only and args.protocol != "VT":
@@ -177,13 +217,24 @@ def main():
     torch.manual_seed(42)
     torch.set_num_threads(8)
     rows = [json.loads(line) for line in Path(args.dataset).read_text(encoding="utf-8").splitlines() if line.strip()]
+    labeled = bool(rows) and "views" in rows[0]
+    if not labeled:
+        for row in rows:
+            row["protocol"] = infer_protocol(row)
     if args.protocol != "all":
         rows = [row for row in rows if row["protocol"] == args.protocol]
+    if args.dry_run:
+        counts = {p: sum(r["protocol"] == p for r in rows) for p in ("VT", "VA")}
+        videos = sorted({r["video"] for r in rows})
+        print(json.dumps({"dataset": args.dataset, "labeled": labeled, "rows": len(rows),
+                          "protocols": counts, "unique_videos": len(videos),
+                          "example": videos[0] if videos else None}, ensure_ascii=False))
+        return
     if args.smoke:
         # One real/generated aligned/conflict example for each protocol when present.
         groups = {}
         for row in rows:
-            key = (row["protocol"], row["sample_type"], row.get("source_is_generated", False))
+            key = (row["protocol"], row.get("sample_type"), row.get("source_is_generated", False))
             groups.setdefault(key, row)
         rows = list(groups.values())
     if args.limit:
@@ -253,17 +304,18 @@ def main():
             start = time.monotonic()
             result = {
                 "sample_id": row["sample_id"], "protocol": row["protocol"],
-                "gold_emotion": row["views"]["M12"]["label"],
-                "gold_conflict": "yes" if row["sample_type"] == "Conflict" else "no",
                 "generated": row.get("source_is_generated", False),
                 "use_in_main": row.get("use_in_main", True),
             }
+            if labeled:
+                result["gold_emotion"] = row["views"]["M12"]["label"]
+                result["gold_conflict"] = "yes" if row["sample_type"] == "Conflict" else "no"
             try:
                 original = dataset_root / row["video"]
                 video, audio, meta = prepare_media(original, cache, args.frames, args.max_side)
                 content = [{"type": "video", "path": str(video.resolve())}]
                 if row["protocol"] == "VT":
-                    prompt = "任务：结合视频画面和以下文字判断情感。\n文字：" + row["text_content"]
+                    prompt = "任务：结合视频画面和以下文字判断情感。\n文字：" + (row.get("text_content") or row.get("text") or "")
                 elif row["protocol"] == "VA":
                     prompt = "任务：结合视频画面和音频判断情感。"
                 else:

@@ -73,6 +73,18 @@ uv run kaggle competitions submit -c video-emotion-uncertainty-2026 -f outputs/s
 
 凭据优先读仓库根目录的 `.env`（从 `.env.example` 复制，`KAGGLE_API_TOKEN` 填 `KGAT_` 开头的新式 token），没有 `.env` 时退回 `~/.kaggle/access_token`；`.env` 已在 `.gitignore` 里。课程给的数据压缩包已经解开到 `Dataset/`，日常不需要重复下载。
 
+## 生成与校验提交
+
+测试集只有 `sample_id/video/text`，`baseline.py` 会自动推断协议并按无标签模式运行：`ch_sims_v2` 的 ID 第二段就是协议，生成片段看视频目录（`video_audio` 记 VA，`silent_video_text` 记 VT）。无标签时 `metrics.json` 只给预测分布、格式合格率和错误数，不出现准确率或 Macro-F1。
+
+```bash
+uv run python scripts/baseline.py --model qwen-omni-3b \
+    --dataset Dataset/test_release.jsonl --output outputs/test
+uv run python scripts/export_submission.py --predictions outputs/test --output submission.csv
+```
+
+`export_submission.py` 校验四件事：id 集合与 `test_release.jsonl` 完全一致、`pred_emotion` 合法、`is_uncertain` 合法、`clarifying_question` 非空（空则补 `none` 并计数）；出现硬错误就不写文件。VT / VA 分模型跑时传多个 `--predictions`，按 `sample_id` 合并；也可以用 `--check` 单独校验已有 CSV。
+
 ## 当前状态
 
 - 账号已加入竞赛并接受规则（2026-10-27）。

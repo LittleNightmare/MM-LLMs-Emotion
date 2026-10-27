@@ -26,7 +26,7 @@ uv sync
 uv run python scripts/test_baseline_metrics.py
 ```
 
-Kaggle 凭据在 `~/.kaggle/access_token`（`KGAT_` 开头），不提交进仓库；下载与提交命令见 README 第 3 节。
+Kaggle 与 HF 凭据优先读仓库根目录 `.env`（模板 `.env.example`，`.env` 已忽略），没有时退回 `~/.kaggle/access_token` 与 HF 登录态；下载与提交命令见 README 第 3 节。
 
 ## 运行与检查
 
@@ -58,7 +58,7 @@ python scripts/baseline.py --model qwen35-2b --protocol VT --model-path models/q
 - 视频默认全片均匀采样 8 帧、最长边 448；音频为 16kHz 单声道；BF16、贪心解码、192 新 token、种子 42。
 - 输出 JSON 字段固定为 `pred_emotion`、`is_conflict`、`is_uncertain`、`clarifying_question`；两个布尔含义字段使用字符串 `yes/no`，无需追问时填字符串 `none`。
 - 每次推理输出 `config.json`、`baseline_source.py`、`model_revision.json`、`predictions.jsonl` 和持续更新的 `metrics.json`。
-- 测试集只有 `sample_id/video/text`，当前推理入口依赖训练/验证标签结构，不能直接运行测试集；提交 CSV 四列为 `sample_id,pred_emotion,is_uncertain,clarifying_question`。
+- 测试集只有 `sample_id/video/text`：`baseline.py` 自动推断协议（ID 第二段，生成片段看 `video_audio` 目录），无标签时只输出描述性统计；`scripts/export_submission.py` 生成并校验提交 CSV（四列 `sample_id,pred_emotion,is_uncertain,clarifying_question`）。
 
 ## 代码与实验记录
 

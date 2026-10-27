@@ -100,10 +100,14 @@ uv run python scripts/fetch_assets.py models qwen-omni-3b          # 拉基座�
 uv run python scripts/fetch_assets.py all qwen-omni-3b             # 数据 + 权重
 ```
 
-`models --list` 列出候选模型。按当前磁盘余量，只建议先下 `qwen-omni-3b`（约 12 GB）；`qwen-omni-7b`、`gemma-e2b`、`qwen35-2b` 等放到服务器或清理空间后再拉。提交仍然用 CLI：
+`models --list` 列出候选模型。按当前磁盘余量，只建议先下 `qwen-omni-3b`（约 12 GB）；`qwen-omni-7b`、`gemma-e2b`、`qwen35-2b` 等放到服务器或清理空间后再拉。测试集推理与提交：
 
 ```bash
-uv run kaggle competitions submit -c video-emotion-uncertainty-2026 -f outputs/submission.csv -m "说明"
+# 测试集没有标签，protocol 由 sample_id 和视频目录推断
+uv run python scripts/baseline.py --model qwen-omni-3b --dataset Dataset/test_release.jsonl --output outputs/test
+# 生成并校验提交 CSV，任何格式错误都会拦住
+uv run python scripts/export_submission.py --predictions outputs/test --output submission.csv
+uv run kaggle competitions submit -c video-emotion-uncertainty-2026 -f submission.csv -m "说明"
 ```
 
 本地 `.venv` 用于冒烟测试和脚本调试；需要 GPU 的长训练和提交结果以 Kaggle Notebook 为准，那边自带 PyTorch，不必在本地装 CUDA 版。
@@ -139,7 +143,8 @@ uv run kaggle competitions submit -c video-emotion-uncertainty-2026 -f outputs/s
 - [ ] 统一评测原始模型、SFT、RL，分别报告 VT、VA 和完整任务结果。
 - [ ] 分析错误案例、冲突样本及追问表现，比较不同奖励设置。
 - [x] 核对 Kaggle 评分与提交规则，记录口径与数据使用限制。
-- [ ] 适配测试集格式（`test_release.jsonl` 只有 `sample_id/video/text`），生成提交 CSV 并上传。
+- [x] 适配测试集格式（`test_release.jsonl` 只有 `sample_id/video/text`），写生成与校验脚本。
+- [ ] 在测试集上跑推理，生成 `submission.csv` 并上传。
 
 ### Demo 与提交
 
