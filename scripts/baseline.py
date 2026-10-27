@@ -8,6 +8,7 @@ import importlib.metadata
 import json
 import os
 from pathlib import Path
+import shutil
 import statistics
 import subprocess
 import time
@@ -53,6 +54,25 @@ def infer_protocol(row):
     return "VA" if "/video_audio/" in row["video"] else "VT"
 
 
+def load_clip_frames(path):
+    """解码缓存片段；坏包先尝试 ffmpeg 重封装再解，仍失败才抛错。"""
+    try:
+        with av.open(str(path)) as container:
+            return np.stack([f.to_ndarray(format="rgb24") for f in container.decode(video=0)])
+    except Exception:  # noqa: BLE001
+        fixed = path.with_suffix(".fix.mp4")
+        subprocess.run([
+            imageio_ffmpeg.get_ffmpeg_exe(), "-v", "error", "-y", "-i", str(path),
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", str(fixed),
+        ], check=False, capture_output=True, timeout=120)
+        try:
+            with av.open(str(fixed)) as container:
+                return np.stack([f.to_ndarray(format="rgb24") for f in container.decode(video=0)])
+        finally:
+            if fixed.exists():
+                fixed.unlink()
+
+
 def prepare_media(video, cache, frames=8, max_side=448):
     """Uniform frame sampling over the ENTIRE clip; audio kept independently."""
     key = hashlib.sha256(video.read_bytes()).hexdigest()
@@ -66,11 +86,16 @@ def prepare_media(video, cache, frames=8, max_side=448):
             fps = float(stream.average_rate or 25)
             # Dataset clips are short. Resize immediately to avoid keeping full HD frames.
             decoded = []
-            for frame in container.decode(video=0):
-                im = frame.to_image()
-                im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
-                w, h = (max(2, x // 2 * 2) for x in im.size)
-                decoded.append(np.array(im.resize((w, h))))
+            try:
+                for frame in container.decode(video=0):
+                    im = frame.to_image()
+                    im.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+                    w, h = (max(2, x // 2 * 2) for x in im.size)
+                    decoded.append(np.array(im.resize((w, h))))
+            except Exception:  # noqa: BLE001
+                # 坏包：保留已经解出来的帧，后面按数量重采样
+                if not decoded:
+                    raise
             if not decoded:
                 raise ValueError(f"No frames decoded: {video}")
             duration = len(decoded) / fps
@@ -95,13 +120,25 @@ def prepare_media(video, cache, frames=8, max_side=448):
 
 
 def ensure_audio(original, audio):
-    if not audio.exists():
-        temp = audio.with_suffix(".tmp.wav")
-        subprocess.run([
+    """抽出 16k 单声道音轨；没有音轨或解码失败时退化为等长静音，流程不中断。"""
+    if audio.exists() and audio.stat().st_size > 0:
+        return
+    temp = audio.with_suffix(".tmp.wav")
+    try:
+        result = subprocess.run([
             imageio_ffmpeg.get_ffmpeg_exe(), "-v", "error", "-y",
             "-i", str(original), "-vn", "-ac", "1", "-ar", "16000", str(temp),
-        ], check=True, capture_output=True)
+        ], check=False, capture_output=True, timeout=120)
+        ok = result.returncode == 0 and temp.exists() and temp.stat().st_size > 0
+    except Exception:  # noqa: BLE001
+        ok = False
+    if ok:
         temp.replace(audio)
+        return
+    if temp.exists():
+        temp.unlink()
+    # 无音轨/坏音轨：写 1 秒静音，保证 VA 分支能继续跑完并留下记录
+    sf.write(audio, np.zeros(16000, dtype="float32"), 16000)
 
 
 def extract_json(text):
@@ -209,6 +246,7 @@ def main():
     parser.add_argument("--max-side", type=int, default=448)
     parser.add_argument("--max-new-tokens", type=int, default=192)
     parser.add_argument("--media-cache", default="outputs/media_cache")
+    parser.add_argument("--shard", default=None, help="只跑一部分，写 i/n（从 0 开始），用于多进程并行")
     parser.add_argument("--dry-run", action="store_true", help="只检查数据与协议推断，不加载模型")
     args = parser.parse_args()
     visual_only = args.model.startswith("qwen35")
@@ -223,6 +261,11 @@ def main():
             row["protocol"] = infer_protocol(row)
     if args.protocol != "all":
         rows = [row for row in rows if row["protocol"] == args.protocol]
+    if args.shard:
+        index, total = (int(x) for x in args.shard.split("/"))
+        if not 0 <= index < total:
+            raise SystemExit(f"--shard 需要 i/n 且 0<=i<n，收到 {args.shard}")
+        rows = rows[index::total]
     if args.dry_run:
         counts = {p: sum(r["protocol"] == p for r in rows) for p in ("VT", "VA")}
         videos = sorted({r["video"] for r in rows})
@@ -335,8 +378,13 @@ def main():
                     })
                 # Decode explicitly: no dependency on changing torchcodec defaults,
                 # and both models receive exactly the same frames and audio.
-                with av.open(str(video)) as decoded_video:
-                    frame_array = np.stack([f.to_ndarray(format="rgb24") for f in decoded_video.decode(video=0)])
+                try:
+                    frame_array = load_clip_frames(video)
+                except Exception:  # noqa: BLE001
+                    # 缓存片段坏了：丢掉这一条缓存，从原视频重新生成一次
+                    shutil.rmtree(video.parent, ignore_errors=True)
+                    video, audio, meta = prepare_media(original, cache, args.frames, args.max_side)
+                    frame_array = load_clip_frames(video)
                 duration = json.loads(meta.read_text())["duration"]
                 from transformers.video_utils import VideoMetadata
                 video_kwargs["video_metadata"] = [VideoMetadata(
