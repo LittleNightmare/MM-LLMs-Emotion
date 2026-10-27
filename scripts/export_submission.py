@@ -72,19 +72,24 @@ def normalize(record):
     return [record["sample_id"], emotion, uncertain, question.strip()], problems
 
 
-def build_rows(test_ids, predictions):
+def build_rows(test_ids, predictions, fill_missing=False):
     rows, hard, soft = [], [], []
     missing = [i for i in test_ids if i not in predictions]
     extra = [i for i in predictions if i not in set(test_ids)]
     for sample_id in test_ids:
         if sample_id not in predictions:
+            if fill_missing:
+                rows.append([sample_id, "neutral", "no", "none"])
+                soft.append(f"{sample_id}: 缺预测，已补 neutral/no/none")
             continue
         row, problems = normalize(predictions[sample_id])
         rows.append(row)
         for problem in problems:
             (hard if "已补" not in problem else soft).append(f"{sample_id}: {problem}")
-    if missing:
+    if missing and not fill_missing:
         hard.append(f"缺少 {len(missing)} 条预测，例如 {missing[:3]}")
+    elif missing:
+        soft.append(f"共 {len(missing)} 条预测缺失，已按 neutral/no/none 补齐")
     if extra:
         soft.append(f"多出 {len(extra)} 条不在测试集的预测，例如 {extra[:3]}")
     return rows, hard, soft
@@ -136,6 +141,8 @@ def main():
     parser.add_argument("--test", default="Dataset/test_release.jsonl")
     parser.add_argument("--output", default="submission.csv")
     parser.add_argument("--check", help="只校验已有 CSV，不生成")
+    parser.add_argument("--fill-missing", action="store_true",
+                        help="解码失败等导致缺预测时，用 neutral/no/none 补齐，保证 734 行")
     args = parser.parse_args()
 
     test_ids = load_test_ids(args.test)
@@ -151,7 +158,7 @@ def main():
     if not args.predictions:
         parser.error("需要 --predictions 或 --check")
     predictions = load_predictions(args.predictions)
-    rows, hard, soft = build_rows(test_ids, predictions)
+    rows, hard, soft = build_rows(test_ids, predictions, fill_missing=args.fill_missing)
 
     for note in soft:
         print("提示:", note)
