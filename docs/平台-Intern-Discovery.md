@@ -66,33 +66,33 @@ uv 方案保留作备用：驱动比 `cu132` 旧、或者需要临时改依赖�
 
 ## 五、代码和数据怎么来回
 
-**代码优先走 GitHub**：平台能直连 GitHub，也支持选分支，克隆和推送都正常，不用来回打包。云盘只放数据和大件权重。
+两边网络不一样：**开发机连不上 GitHub，训练任务支持从 GitHub 拉代码**（可选分支）。
+
+| 路径 | 方式 |
+| --- | --- |
+| 本机 ↔ GitHub | 正常 push / pull |
+| 本机 → 开发机 | 云盘 tgz，[scripts/sync_code.py](../scripts/sync_code.py) 打包上传，约 150 KB |
+| 本机 → 训练任务 | 「代码来源」选 Git 仓库，填地址和分支，平台自己拉 |
+
+开发机上解包（tgz 默认不含 `.git`，所以机器上不能 commit/push，版本管理仍在本机）：
 
 ```bash
-git clone -b docs/data-readiness <repo-url> /data/MM-LLMs-Emotion/repo
+mkdir -p /data/MM-LLMs-Emotion/repo
+tar -xzf /data/MM-LLMs-Emotion/mm-code-*.tgz -C /data/MM-LLMs-Emotion/repo
 cd /data/MM-LLMs-Emotion/repo
-cp .env.example .env      # .env 不在 git 里，克隆后要自己填 token
+cp .env.example .env        # .env 不在包和 git 里，要自己填 token
 ```
 
-训练任务的「代码来源」也能直接选 Git 仓库，填仓库地址和分支，平台会拉到 `/code/workspace`；想复用 `/data` 里的环境就选「我的云盘」并指向代码目录。
-
-GitHub 不通时的备选是 [scripts/sync_code.py](../scripts/sync_code.py) 打包上传，云盘上现有的 `mm-code-*.tgz` 就是这条路：
+本机打包上传：
 
 ```bash
 uv run python scripts/sync_code.py pack          # dist/mm-code-<时间>.tgz
 uv run python scripts/sync_code.py upload        # 传到云盘 /MM-LLMs-Emotion/
 ```
 
-机器上解包：
-
-```bash
-mkdir -p /data/MM-LLMs-Emotion/repo
-tar -xzf /data/MM-LLMs-Emotion/mm-code-*.tgz -C /data/MM-LLMs-Emotion/repo
-```
+开发机上临时改了代码要带回来：`sync_code.py download` 或网页云盘下载，再在本机提交。
 
 数据不用手动处理：`machine_bootstrap.sh` 会把 `/data/assets/course-dataset.tar` 解到 `/data/assets/course-dataset` 并删掉 tar，再软链到仓库的 `Dataset/`。
-
-需要保留 git 历史时用 `pack --with-git`，或者走 `git bundle`：本地 `git bundle create mm.bundle --all`，机器上 `git clone mm.bundle`，回传再 `git fetch`。GitHub 能不能直连还没验证，先按不通准备。
 
 `discovery-ctl` 本机已装（v1.2.1，`%LOCALAPPDATA%\discovery\bin\discovery-ctl.exe`，[scripts/sync_code.py](../scripts/sync_code.py) 会自动找到它）；开发机里一般自带。上传大文件时偶发 `HTTP transport failed ... EOF`，原样重试即可。
 
@@ -126,14 +126,14 @@ curl -I https://www.kaggle.com && curl -I https://hf-mirror.com && curl -I https
 
 一句话分工：调代码、装环境、跑小样本、导出提交用开发机；几小时以上的 SFT/RL 用训练任务，免得开发机掉线或超时。
 
-- 代码来源选“我的云盘”，路径填 `/MM-LLMs-Emotion/repo`，启动命令写 `bash /data/MM-LLMs-Emotion/repo/scripts/xxx.sh`；选 Git 来源时工作目录是临时的 `/code/workspace`。
+- 代码来源优先选 Git 仓库，填地址和分支，平台拉到临时目录 `/code/workspace`，启动命令写 `bash /code/workspace/scripts/xxx.sh`；要复用 `/data` 里的 venv 或软链，就选「我的云盘」并指向 `/MM-LLMs-Emotion/repo`。
 - 结果和 checkpoint 必须写 `/data`，任务停止后不能续跑，只能“重新训练”，断点续训靠 `/data` 里的 checkpoint。
 - TensorBoard 日志写到 `TENSORBOARD_LOGDIR` 指定的目录，任务详情页才有曲线。
 - 单次最长 7×24；额度有限时优先长任务，别拿 GPU 机器做数据处理。
 
 ## 八、待验证
 
-- 开发机与训练任务的外网出口（Kaggle / Hugging Face / PyPI）。
+- 开发机与训练任务的外网出口（Kaggle / Hugging Face / PyPI）；已知开发机连不上 GitHub，其余待验证。若开发机也出不去，模型权重只能经云盘上传。
 - 开发机有没有 SSH 入口；没有的话只能靠网页 VSCode 终端。
 - `scripts/machine_bootstrap.sh` 在真实镜像上的表现（本机没有 bash 环境，只做了人工检查）。
 - A100 机器驱动能否直接跑 `cu132` 轮子；不行就退 cu126/cu128，或用镜像自带 torch 2.4 跑推理。
