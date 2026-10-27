@@ -94,6 +94,8 @@ uv run python scripts/sync_code.py upload        # 传到云盘 /MM-LLMs-Emotion
 
 数据不用手动处理：`machine_bootstrap.sh` 会把 `/data/assets/course-dataset.tar` 解到 `/data/assets/course-dataset` 并删掉 tar，再软链到仓库的 `Dataset/`。
 
+模型权重只留云盘一份：本机 `fetch_assets.py models qwen-omni-3b` 下载（约 12 GB），上传到云盘 `/assets/models/qwen-omni-3b`，然后删掉本地副本。机器上 `/data/assets/models` 已被 bootstrap 软链到 `repo/models`，推理时 `--model-path models/qwen-omni-3b` 直接用，不占计算时间。
+
 `discovery-ctl` 本机已装（v1.2.1，`%LOCALAPPDATA%\discovery\bin\discovery-ctl.exe`，[scripts/sync_code.py](../scripts/sync_code.py) 会自动找到它）；开发机里一般自带。上传大文件时偶发 `HTTP transport failed ... EOF`，原样重试即可。
 
 ## 六、第一次进机先跑这几条

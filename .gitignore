@@ -10,4 +10,5 @@ evidence/
 logs/
 models/
 dist/
+.hf-home/
 *.tar
