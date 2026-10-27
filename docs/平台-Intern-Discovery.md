@@ -126,8 +126,17 @@ curl -I https://www.kaggle.com && curl -I https://hf-mirror.com && curl -I https
 
 一句话分工：调代码、装环境、跑小样本、导出提交用开发机；几小时以上的 SFT/RL 用训练任务，免得开发机掉线或超时。
 
-- 代码来源优先选 Git 仓库，填地址和分支，平台拉到临时目录 `/code/workspace`，启动命令写 `bash /code/workspace/scripts/xxx.sh`；要复用 `/data` 里的 venv 或软链，就选「我的云盘」并指向 `/MM-LLMs-Emotion/repo`。
-- 结果和 checkpoint 必须写 `/data`，任务停止后不能续跑，只能“重新训练”，断点续训靠 `/data` 里的 checkpoint。
+- 代码来源三种，创建页实测：**Git 仓库**（填仓库地址 + 分支，默认 main）、**本地上传**（zip/tar，≤500 MB，禁止带权重和大数据集）、**我的云盘**（填代码所在文件夹）。
+- Git 来源只认公开仓库：表单里只有地址和分支两个输入框，没有凭据字段。私有仓库得走「本地上传」或「我的云盘」。
+- Git 来源会拉到临时目录 `/code/workspace`，启动命令写 `bash /code/workspace/scripts/xxx.sh`。这个目录里没有 `Dataset/`、`models/` 软链，启动命令前面先补上：
+
+  ```bash
+  ln -sfn /data/assets/course-dataset /code/workspace/Dataset; ln -sfn /data/assets/models /code/workspace/models; bash /code/workspace/scripts/train_sft.sh
+  ```
+
+  启动命令上限 500 字符，够用；嫌长就用「我的云盘」来源指向 `/MM-LLMs-Emotion/repo`，那里软链已经建好。
+- 创建页的资源只有 `NvidiaA100-1-80G`、`Ascend910B-1-64G`、`CPU-4C-16G` 三档，没有 8 卡选项；3B 的 LoRA 用单卡 80G 足够。
+- 结果和 checkpoint 必须写 `/data`，任务停止后不能续跑，只能「重新训练」，断点续训靠 `/data` 里的 checkpoint。
 - TensorBoard 日志写到 `TENSORBOARD_LOGDIR` 指定的目录，任务详情页才有曲线。
 - 单次最长 7×24；额度有限时优先长任务，别拿 GPU 机器做数据处理。
 
