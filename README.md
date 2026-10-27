@@ -18,8 +18,16 @@
 | 资料 | 链接 |
 | --- | --- |
 | 课程数据集 | [人工智能原理与应用-数据集](https://bhpan.buaa.edu.cn/link/AAA63CDEC9ED3B48B2A7C64CB5911C04AD) |
-| Kaggle 竞赛 | [大模型后训练](https://www.kaggle.com/t/6807427c8d58473e914ea43f81b90bd1) |
+| Kaggle 竞赛 | [大模型后训练](https://www.kaggle.com/competitions/video-emotion-uncertainty-2026)（邀请链接 `https://www.kaggle.com/t/6807427c8d58473e914ea43f81b90bd1`） |
 | 作业提交 | [大作业](https://bhpan.buaa.edu.cn/link/AACBE9D036E1CF421FAB26A6891595076B) |
+
+### Kaggle 竞赛
+
+总分 `0.5 × 情感 Macro-F1 + 0.3 × 冲突识别准确率 + 0.2 × 一致样本校准率`。冲突识别准确率统计真冲突样本里 `is_uncertain=yes` 的比例，一致样本校准率统计真一致样本里 `is_uncertain=no` 的比例；两项只看不确定性字段，不看情感判断是否判对，`clarifying_question` 不参与评分。比赛期间排行榜按 Public 70% 计分，结束后按 Private 30% 排名；排行榜分数仅供参考，最终成绩以实验报告和 Demo 为准。
+
+提交为 `sample_id,pred_emotion,is_uncertain,clarifying_question` 四列，覆盖全部 734 条样本；`pred_emotion` 取 `positive/negative/neutral`，`is_uncertain` 取 `yes/no`，无需追问时 `clarifying_question` 填 `none`，留空会被拒绝；每天最多提交 10 次。
+
+数据仅限本课程作业使用，禁止外传、公开或商用；禁止以任何方式获取测试集标签，包括人工看视频标注后针对性提交。评分口径、字段对照与提交流程见 [Kaggle 竞赛与提交](docs/kaggle-竞赛与提交.md)。
 
 ## 2. 数据集格式
 
@@ -35,7 +43,9 @@
 | `test_release.jsonl` | 测试，无公开标签 | 734 | 385 | 349 |
 | `sample_submission.csv` | 提交格式示例 | 734 | — | — |
 
-训练、验证样本的主要字段如下：
+`videos/` 共 2974 个 mp4、143 个目录，其中 `videos/gen/` 是合成补充片段；整个数据集 2978 个文件、1.57 GB，采用 CC BY-NC-SA 4.0，仅限课程使用。
+
+训练、验证样本的字段如下（示例省略了部分元数据字段）：
 
 ```json
 {
@@ -44,19 +54,24 @@
   "video": "videos/video_0001/0001.mp4",
   "text_content": "我不想嫁给李茶",
   "sample_type": "Aligned",
+  "dominant_modality": "balanced",
+  "source_dataset": "ch_sims_v2",
+  "source_is_generated": false,
   "views": {
-    "M1": {"label": "negative"},
-    "M2": {"label": "negative"},
-    "M12": {"label": "negative"}
+    "M1": {"label": "negative", "is_clear": true},
+    "M2": {"label": "negative", "is_clear": true},
+    "M12": {"label": "negative", "is_clear": true}
   }
 }
 ```
 
 `video` 是相对于 `Dataset/` 的路径。M1 为画面标签，M2 为文字或音频标签，M12 为综合情感标签。情感分为 `negative / positive / neutral`；`sample_type` 分为一致（Aligned）和冲突（Conflict）。
 
-测试集只有 `sample_id`、`video`、`text`，协议根据 ID 和视频目录区分。提交文件包含 `sample_id,pred_emotion,is_uncertain,clarifying_question` 四列，本地评测另外记录 `is_conflict`。
+另有 `quality_flags`、`use_in_main`、`label_basis`、`split_group_id`、`annotator_agreement`、`annotation_count` 等字段；`media_paths` 是数据构建机器的绝对路径，在本机不可用，取视频一律用 `video`。每个视角还带 `specific_affect`（本批为空）和 `is_clear`，但本批数据 `M12.is_clear` 全为 true，不能用它当不确定性标签。训练集 3354 条中冲突 411 条（约 12%），中性样本仅 7 条。
 
-**数据状态：已有三份划分和情感/冲突监督，尚未满足完整作业的数据需求。**当前本机未放置原始 `Dataset/`，上述数量依据既有实验记录；验证集规模已由归档预测复核。跨划分的视频及衍生样本重合尚待审计，不能把“已划分”等同于“无泄漏”。
+测试集只有 `sample_id`、`video`、`text`（训练/验证里同一内容叫 `text_content`），没有 `protocol` 字段：`ch_sims_v2` 的 ID 第二段即协议，生成片段按视频目录区分，`silent_video_text` 记 VT、`video_audio` 记 VA。提交文件包含 `sample_id,pred_emotion,is_uncertain,clarifying_question` 四列，本地评测另外记录 `is_conflict`。
+
+**数据状态：已有三份划分和情感/冲突监督，尚未满足完整作业的数据需求。**`Dataset/` 已于 2026-10-27 从 Kaggle 竞赛页下载完整数据（2974 个视频 + 3 个 JSONL + 提交样例），样本数、VT/VA 与冲突条数均已按本地文件复核。跨划分的视频及衍生样本重合尚待审计，不能把“已划分”等同于“无泄漏”。
 
 | 尚缺内容 | 当前状态 | 需要补齐 |
 | --- | --- | --- |
@@ -67,11 +82,39 @@
 
 验证集没有中性样本，当前 Macro-F1 按正向、负向两类计算；冲突只有 74 条，需同时看冲突召回率与 F1。四项缺口的完成条件、划分检查和补标约束见[数据状态与缺口](docs/数据状态与缺口.md)。
 
-## 3. Plan
+## 3. 环境与依赖
+
+依赖写在 [pyproject.toml](pyproject.toml)，`uv sync` 在仓库根目录建 `.venv`（Python 3.12、torch 2.13.0+cu132、torchvision 0.28.0+cu132，另含 kaggle CLI 和 jupyterlab），`uv.lock` 保证多人装到同一套版本。默认走清华 PyPI 和 SJTU 的 pytorch-wheels 镜像，海外协作时把 `pyproject.toml` 里两个 index 换回官方地址再重新 `uv lock`。
+
+```bash
+uv sync
+uv run python scripts/test_baseline_metrics.py
+```
+
+凭据放仓库根目录的 `.env`（从 `.env.example` 复制一份改），`.env` 已被 `.gitignore` 排除，不会进仓库；不填也能跑，脚本会退回 `~/.kaggle/access_token` 和 Hugging Face 的登录态。支持 `KAGGLE_API_TOKEN`、`HF_TOKEN`、`HF_ENDPOINT` 三个键。数据和权重都走同一个脚本：
+
+```bash
+uv run python scripts/fetch_assets.py dataset                     # 下载并校验数据（734/666/3354、2974 个视频）
+uv run python scripts/fetch_assets.py models qwen-omni-3b --dry-run  # 先看体积，不下载
+uv run python scripts/fetch_assets.py models qwen-omni-3b          # 拉基座权重到 models/
+uv run python scripts/fetch_assets.py all qwen-omni-3b             # 数据 + 权重
+```
+
+`models --list` 列出候选模型。按当前磁盘余量，只建议先下 `qwen-omni-3b`（约 12 GB）；`qwen-omni-7b`、`gemma-e2b`、`qwen35-2b` 等放到服务器或清理空间后再拉。提交仍然用 CLI：
+
+```bash
+uv run kaggle competitions submit -c video-emotion-uncertainty-2026 -f outputs/submission.csv -m "说明"
+```
+
+本地 `.venv` 用于冒烟测试和脚本调试；需要 GPU 的长训练和提交结果以 Kaggle Notebook 为准，那边自带 PyTorch，不必在本地装 CUDA 版。
+
+## 4. Plan
 
 ### 数据与基线
 
 - [x] 整理数据划分、字段和 VT / VA 输入方式。
+- [x] 从 Kaggle 下载完整数据集到 `Dataset/`，按本地文件复核样本数、VT/VA 与视频可读性。
+- [x] 用 uv 固定依赖并建好本地环境。
 - [x] 跑通视频采样、音频处理和模型推理。
 - [x] 完成 Gemma 4 E2B、Qwen2.5-Omni-3B / 7B、Qwen3.5-0.8B / 2B 的基线测试，其中 Qwen3.5 仅测 VT。
 - [x] 保存原始回答、配置、指标和日志，整理[基线实验结果](docs/基线实验.md)。
@@ -79,7 +122,8 @@
 ### 训练准备与 SFT
 
 - [ ] 确定训练基座与单卡配置，优先验证 Omni-3B 的 LoRA 训练。
-- [ ] 核对课程补标/外部数据规则，审计训练、验证、测试间视频及衍生样本重合，建立训练排除清单。
+- [x] 核对课程/Kaggle 补标与外部数据规则，见 [Kaggle 竞赛与提交](docs/kaggle-竞赛与提交.md)。
+- [ ] 审计训练、验证、测试间视频及衍生样本重合，建立训练排除清单。
 - [ ] 补齐独立的不确定性标签与证据充分性判定规范。
 - [ ] 补齐澄清问题示例、信息需求与问题质量评价规范。
 - [ ] 补齐用户回答后的判断更新案例，覆盖改判、保持原判和仍不确定。
@@ -94,7 +138,8 @@
 - [ ] 从 SFT 模型继续 RL 训练，保存训练配置和模型。
 - [ ] 统一评测原始模型、SFT、RL，分别报告 VT、VA 和完整任务结果。
 - [ ] 分析错误案例、冲突样本及追问表现，比较不同奖励设置。
-- [ ] 核对 Kaggle 评分与提交规则，适配测试集格式并生成提交文件。
+- [x] 核对 Kaggle 评分与提交规则，记录口径与数据使用限制。
+- [ ] 适配测试集格式（`test_release.jsonl` 只有 `sample_id/video/text`），生成提交 CSV 并上传。
 
 ### Demo 与提交
 

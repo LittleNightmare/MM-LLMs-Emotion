@@ -1,0 +1,29 @@
+[
+  {
+    "slug": "emotion-llama",
+    "zotero_item_key": "IF7SGZ4P",
+    "zotero_attachment_key": "52HKI6A5",
+    "pdf": "reference/emotion-llama/emotion-llama.pdf",
+    "pages": 49,
+    "sha256": "5c12db08d021656b1e825b8cd6d56ed34fe9ba48ecac3b3788d5bd6d90c9bef5",
+    "text_layer": "reference/emotion-llama/text-layer.md"
+  },
+  {
+    "slug": "r1-omni",
+    "zotero_item_key": "JC6CQL8E",
+    "zotero_attachment_key": "YGJFHQYG",
+    "pdf": "reference/r1-omni/r1-omni.pdf",
+    "pages": 9,
+    "sha256": "98aaf5c42e7350196bd81a407c10df6fb40b56ad6564e5f3ac0693942444c799",
+    "text_layer": "reference/r1-omni/text-layer.md"
+  },
+  {
+    "slug": "mer2024",
+    "zotero_item_key": "MMAYLH2T",
+    "zotero_attachment_key": "UFHZJTPD",
+    "pdf": "reference/mer2024/mer2024.pdf",
+    "pages": 8,
+    "sha256": "4bb9a054790529df4ec48a7a7b46425c6e8dfd55c886e589ef80dc562bffb874",
+    "text_layer": "reference/mer2024/text-layer.md"
+  }
+]

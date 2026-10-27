@@ -1,0 +1,43 @@
+[project]
+name = "mm-llms-emotion"
+version = "0.1.0"
+description = "多模态情感识别与大模型后训练：零样本基线、SFT、RL 与交互 Demo"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch==2.13.0+cu132",
+    "torchvision==0.28.0+cu132",
+    "transformers==5.20.2",
+    "accelerate==1.15.0",
+    "huggingface_hub==2.2.0",
+    "av==19.0.1",
+    "numpy==2.3.5",
+    "pillow==12.0.0",
+    "soundfile==0.14.0",
+    "librosa==1.0.0",
+    "imageio-ffmpeg==0.6.0",
+    "scikit-learn==1.9.1",
+    "modelscope==1.40.2",
+    "kaggle>=1.8.0",
+]
+
+[dependency-groups]
+dev = [
+    "jupyterlab>=4.4",
+]
+
+[tool.uv]
+# 国内镜像：torch / torchvision 走 SJTU 的 pytorch-wheels 镜像，
+# 其余包走清华 PyPI 镜像。海外协作时把两个 URL 换回官方地址即可。
+[[tool.uv.index]]
+name = "pytorch-cu132"
+url = "https://mirror.sjtu.edu.cn/pytorch-wheels/cu132"
+explicit = true
+
+[[tool.uv.index]]
+name = "tuna"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu132" }
+torchvision = { index = "pytorch-cu132" }

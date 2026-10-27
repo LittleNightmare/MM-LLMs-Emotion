@@ -1,0 +1,44 @@
+{
+  "verified_at": "2026-10-22T09:06:46.103062+00:00",
+  "mineru_cli": "v0.5.9",
+  "model": "vlm",
+  "command": "mineru-open-api extract reference/emotion-llama/emotion-llama.pdf reference/r1-omni/r1-omni.pdf reference/mer2024/mer2024.pdf --model vlm --language en --format md,json --output reference/parsed --timeout 1800",
+  "papers": [
+    {
+      "slug": "emotion-llama",
+      "pdf_pages": 49,
+      "parsed_pages": 49,
+      "missing_pages": [],
+      "markdown": "reference/parsed/emotion-llama.md",
+      "json": "reference/parsed/emotion-llama.json",
+      "image_reference_count": 68,
+      "missing_images": [],
+      "pdf_matches_zotero": true,
+      "final_page_tail_checked": true
+    },
+    {
+      "slug": "r1-omni",
+      "pdf_pages": 9,
+      "parsed_pages": 9,
+      "missing_pages": [],
+      "markdown": "reference/parsed/r1-omni.md",
+      "json": "reference/parsed/r1-omni.json",
+      "image_reference_count": 3,
+      "missing_images": [],
+      "pdf_matches_zotero": true,
+      "final_page_tail_checked": true
+    },
+    {
+      "slug": "mer2024",
+      "pdf_pages": 8,
+      "parsed_pages": 8,
+      "missing_pages": [],
+      "markdown": "reference/parsed/mer2024.md",
+      "json": "reference/parsed/mer2024.json",
+      "image_reference_count": 1,
+      "missing_images": [],
+      "pdf_matches_zotero": true,
+      "final_page_tail_checked": true
+    }
+  ]
+}
