@@ -5,6 +5,7 @@
 #   bash scripts/machine_bootstrap.sh                 # 只建目录、接线、装环境、体检
 #   bash scripts/machine_bootstrap.sh --data          # 顺带下载竞赛数据（1.57 GB）
 #   bash scripts/machine_bootstrap.sh --model qwen-omni-3b   # 顺带下载基座权重（约 12 GB）
+#   bash scripts/machine_bootstrap.sh --no-uv        # 依赖已在镜像里，跳过 uv
 #
 # 约定：大件放 $ASSETS（默认 /data/assets），仓库里只留软链接；
 # venv 和 uv 缓存也放 /data，避免开发机重置后重装。
@@ -18,6 +19,7 @@ ENV_DIR="/data/env/mm-llms-emotion"
 UV_CACHE="/data/cache/uv"
 WITH_DATA=0
 MODEL=""
+NO_UV=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -25,10 +27,19 @@ while [ $# -gt 0 ]; do
     --dataset-name) DATASET_NAME="$2"; shift 2 ;;
     --data) WITH_DATA=1; shift ;;
     --model) MODEL="$2"; shift 2 ;;
+    --no-uv) NO_UV=1; shift ;;
     -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
     *) echo "未知参数: $1"; exit 2 ;;
   esac
 done
+
+run_py() {
+  if [ "$NO_UV" = "1" ]; then
+    python "$@"
+  else
+    uv run python "$@"
+  fi
+}
 
 say() { printf '\n== %s\n' "$*"; }
 
@@ -73,28 +84,38 @@ else
   ln -s "$ASSETS/models" "$REPO/models"
 fi
 
-say "3/6 准备 uv"
-export UV_CACHE_DIR="$UV_CACHE"
-export UV_PROJECT_ENVIRONMENT="$ENV_DIR"
-if ! command -v uv >/dev/null 2>&1; then
-  echo "没找到 uv，用 pip 装一个到用户目录"
-  python -m pip install -q -i https://pypi.tuna.tsinghua.edu.cn/simple uv
-  export PATH="$HOME/.local/bin:$PATH"
-fi
-uv --version
-
-say "4/6 同步依赖（首次会下 Python 3.12 和 CUDA 版 torch，几分钟）"
+say "3/6 准备 Python 环境"
 cd "$REPO"
-uv sync
+if [ "$NO_UV" = "1" ]; then
+  echo "跳过 uv，使用镜像里的 Python"
+  python -V
+else
+  export UV_CACHE_DIR="$UV_CACHE"
+  export UV_PROJECT_ENVIRONMENT="$ENV_DIR"
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "没找到 uv，用 pip 装一个到用户目录"
+    python -m pip install -q -i https://pypi.tuna.tsinghua.edu.cn/simple uv
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+  uv --version
+fi
+
+say "4/6 同步依赖"
+if [ "$NO_UV" = "1" ]; then
+  python -c "import torch, transformers, av, librosa, sklearn, kaggle; print('依赖齐全')"
+else
+  echo "首次会下 Python 3.12 和 CUDA 版 torch，几分钟"
+  uv sync
+fi
 
 say "5/6 拉资源"
 if [ "$WITH_DATA" = "1" ]; then
-  uv run python scripts/fetch_assets.py dataset
+  run_py scripts/fetch_assets.py dataset
 else
   echo "跳过数据（--data 才下载）"
 fi
 if [ -n "$MODEL" ]; then
-  uv run python scripts/fetch_assets.py models "$MODEL"
+  run_py scripts/fetch_assets.py models "$MODEL"
 else
   echo "跳过权重（--model qwen-omni-3b 才下载）"
 fi
@@ -105,7 +126,7 @@ if command -v nvidia-smi >/dev/null 2>&1; then
 else
   echo "没有 nvidia-smi：这台是纯 CPU 资源？"
 fi
-uv run python - <<'PY'
+run_py - <<'PY'
 import torch
 print("torch", torch.__version__, "cuda", torch.cuda.is_available(),
       "bf16", torch.cuda.is_bf16_supported() if torch.cuda.is_available() else False)
@@ -124,4 +145,8 @@ echo "仓库:   $REPO"
 echo "数据:   $ASSETS/$DATASET_NAME"
 echo "权重:   $ASSETS/models"
 echo "venv:   $ENV_DIR"
-echo "之后每次进机器都要先: export UV_PROJECT_ENVIRONMENT=$ENV_DIR UV_CACHE_DIR=$UV_CACHE"
+if [ "$NO_UV" = "1" ]; then
+  echo "模式: 镜像自带依赖（--no-uv），直接用 python"
+else
+  echo "之后每次进机器都要先: export UV_PROJECT_ENVIRONMENT=$ENV_DIR UV_CACHE_DIR=$UV_CACHE"
+fi

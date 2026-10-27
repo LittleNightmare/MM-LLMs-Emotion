@@ -37,18 +37,24 @@
 
 配额估算：1.57 + 12 + venv 3.5 + 代码 ≈ 17.5 GB，30 GB 够用；再加 7B（16 GB）就要扩容，或者把竞赛数据传成平台数据集挂到 `/dataset`（只读、不占云盘）。
 
-## 三、环境：不急着做镜像
+## 三、环境：自建镜像
 
-官方镜像预装 PyTorch 2.4.0 / Python 3.11，和仓库钉的 `torch 2.13.0+cu132` / Python 3.12 不一致。建议先用 uv 在云盘里建环境：
+官方镜像预装 PyTorch 2.4.0 / Python 3.11，和仓库钉的 `torch 2.13.0+cu132` / Python 3.12 不一致。做法是自建一个镜像，把 `transformers` / `av` / `librosa` 这些依赖装进去，`torch` 用基础镜像自带的；文件在 [docker/](../docker/)。
+
+两条路都能走：
+
+- **快捷安装**：镜像页填 apt 清单和 pip 清单，直接抄 [apt-packages.txt](../docker/apt-packages.txt) 和 [pip-packages.txt](../docker/pip-packages.txt)。
+- **Dockerfile**：用 [Dockerfile](../docker/Dockerfile)，额外装 ffmpeg、设 `HF_ENDPOINT`、构建阶段就做 import 自检。
+
+平台上的三个限制：使用场景分开发机和训练任务，两边都要用就建两个镜像；最多 5 个镜像；构建要选资源配置、消耗算力点。基础镜像按 A100 那台机器的驱动挑 CUDA 版本，`nvidia-smi` 确认后再定。
+
+镜像建好后，开发机里依赖已就位，跳过 uv：
 
 ```bash
-export UV_PROJECT_ENVIRONMENT=/data/env/mm-llms-emotion
-uv sync
+bash scripts/machine_bootstrap.sh --no-uv
 ```
 
-venv 落在 `/data`，后续开发机和训练任务都能复用同一份，只装一次。做镜像要选资源配置、消耗算力点，还要占 5 个镜像名额，在额度紧张时不划算。
-
-需要自建镜像的情况：训练任务每次都要重装依赖、或镜像自带 torch 与机器驱动不匹配导致跑不起来。那时用 Dockerfile 基于官方镜像 pip 装 `pyproject.toml` 里的依赖即可，构建一次反复用。
+uv 方案保留作备用：驱动比 `cu132` 旧、或者需要临时改依赖版本时，仍然可以用 `uv sync` 在 `/data/env` 建一套。
 
 ## 四、怎么连进去（有没有 SSH）
 
