@@ -9,4 +9,5 @@ outputs/
 evidence/
 logs/
 models/
+dist/
 *.tar
