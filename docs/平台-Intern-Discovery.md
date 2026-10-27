@@ -50,7 +50,15 @@ venv 落在 `/data`，后续开发机和训练任务都能复用同一份，只�
 
 需要自建镜像的情况：训练任务每次都要重装依赖、或镜像自带 torch 与机器驱动不匹配导致跑不起来。那时用 Dockerfile 基于官方镜像 pip 装 `pyproject.toml` 里的依赖即可，构建一次反复用。
 
-## 四、代码怎么来回
+## 四、怎么连进去（有没有 SSH）
+
+平台文档里写的“VSCode”是**浏览器里的 code-server**，不是本地 VS Code 的 Remote-SSH：开发机页说“点击进入开发机，默认打开基于 VSCode（code-server）的在线编辑器，也可切换至 JupyterLab”。翻遍开发机、数据准备、云盘、训练任务、镜像、用户中心这几页，都没有 SSH 地址、端口或密钥的说明。
+
+网上能搜到的 `ssh -p <port> root@ssh.intern-ai.org.cn` 属于**书生大模型实战营的 InternStudio**，是另一套平台（例如[这篇实战营记录](https://blog.csdn.net/qq_45943172/article/details/143985608)里的“SSH 连接”按钮会给出登录命令和密码），不能直接套到 discovery 上。
+
+结论：按“只有网页 IDE”准备。开通开发机后先看卡片或“…”菜单里有没有 SSH 相关入口；有的话用本地 VS Code 的 Remote-SSH 填命令即可，没有就一直在浏览器里的 VSCode 终端操作。网页终端能跑的命令和 SSH 完全一样，只是断开连接后本地看不到现场。
+
+## 五、代码怎么来回
 
 仓库用 [scripts/sync_code.py](../scripts/sync_code.py) 打包，默认排除 `Dataset/`、`models/`、`reference/`、`.venv/`、`.git`，产物约 100 KB：
 
@@ -72,7 +80,19 @@ ln -s /data/assets/models  /data/MM-LLMs-Emotion/repo/models
 
 `discovery-ctl` 的安装方式文档里没写；开发机大概率自带（进机器先 `which discovery-ctl`），本地要用得找平台给的下载入口。没有 CLI 时，网页云盘拖拽上传同样可以，只是慢一些。
 
-## 五、第一次进机先跑这几条
+## 六、第一次进机先跑这几条
+
+仓库里带了一键脚本 [scripts/machine_bootstrap.sh](../scripts/machine_bootstrap.sh)，在仓库根目录执行：
+
+```bash
+bash -n scripts/machine_bootstrap.sh        # 先语法自检
+bash scripts/machine_bootstrap.sh           # 建目录、接线、装环境、体检
+bash scripts/machine_bootstrap.sh --data --model qwen-omni-3b   # 顺带拉数据和权重
+```
+
+它会做六件事：建 `/data/assets`、`/data/env`、`/data/cache/uv`；把仓库里的 `Dataset/`、`models/` 软链到 assets；装 uv 并 `uv sync`；按需下载数据和权重；最后打印 GPU、驱动、torch、bf16、磁盘和三个网络探测结果。脚本不需要 sudo，可重复执行。
+
+手动检查的话，这些最要紧：
 
 ```bash
 nvidia-smi                                  # 驱动版本，决定 cu132 轮子能不能用
@@ -84,16 +104,18 @@ curl -I https://www.kaggle.com && curl -I https://hf-mirror.com && curl -I https
 
 外网出口是最关键的未知项：通不通决定数据和模型是在机器里直接下，还是本地传上去。
 
-## 六、训练任务怎么配
+## 七、训练任务怎么配
 
 - 代码来源选“我的云盘”，路径填 `/MM-LLMs-Emotion/repo`，启动命令写 `bash /data/MM-LLMs-Emotion/repo/scripts/xxx.sh`；选 Git 来源时工作目录是临时的 `/code/workspace`。
 - 结果和 checkpoint 必须写 `/data`，任务停止后不能续跑，只能“重新训练”，断点续训靠 `/data` 里的 checkpoint。
 - TensorBoard 日志写到 `TENSORBOARD_LOGDIR` 指定的目录，任务详情页才有曲线。
 - 单次最长 7×24；额度有限时优先长任务，别拿 GPU 机器做数据处理。
 
-## 七、待验证
+## 八、待验证
 
 - 开发机与训练任务的外网出口（Kaggle / Hugging Face / PyPI）。
+- 开发机有没有 SSH 入口；没有的话只能靠网页 VSCode 终端。
+- `scripts/machine_bootstrap.sh` 在真实镜像上的表现（本机没有 bash 环境，只做了人工检查）。
 - A100 机器驱动能否直接跑 `cu132` 轮子；不行就退 cu126/cu128，或用镜像自带 torch 2.4 跑推理。
 - `discovery-ctl` 在本地 Windows 上的安装包与登录方式。
 - 云盘实际可用容量与扩容审批速度。
