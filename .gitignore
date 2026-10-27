@@ -12,3 +12,5 @@ models/
 dist/
 .hf-home/
 *.tar
+.agents/
+skills-lock.json

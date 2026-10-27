@@ -108,7 +108,7 @@ fi
 
 say "4/6 同步依赖"
 if [ "$NO_UV" = "1" ]; then
-  python -c "import torch, transformers, av, librosa, sklearn, kaggle; print('依赖齐全')"
+  python -c "import importlib.metadata as m, torch, transformers, av, librosa, sklearn; print('依赖齐全, kaggle CLI', m.version('kaggle'))"
 else
   echo "首次会下 Python 3.12 和 CUDA 版 torch，几分钟"
   uv sync

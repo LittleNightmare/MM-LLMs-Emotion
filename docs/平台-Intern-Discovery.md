@@ -144,7 +144,7 @@ curl -I https://www.kaggle.com && curl -I https://hf-mirror.com && curl -I https
 
 ## 八、待验证
 
-- 开发机与训练任务的外网出口（Kaggle / Hugging Face / PyPI）；已知开发机连不上 GitHub，其余待验证。若开发机也出不去，模型权重只能经云盘上传。
+- 外网出口：**开发机实测无外网**（`www.kaggle.com`、`hf-mirror.com`、PyPI 均返回 000），训练任务待验证。因此数据、权重、依赖全部经云盘进入，机器里不要指望 `pip install` 或 `fetch_assets` 下载；推理时设 `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`，避免 transformers 尝试联网。
 - 开发机有没有 SSH 入口；没有的话只能靠网页 VSCode 终端。
 - `scripts/machine_bootstrap.sh` 在真实镜像上的表现（本机没有 bash 环境，只做了人工检查）。
 - A100 机器驱动能否直接跑 `cu132` 轮子；不行就退 cu126/cu128，或用镜像自带 torch 2.4 跑推理。
