@@ -20,9 +20,13 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # torch：开发机基础镜像是 2.4.0，transformers 5.20.2 要求 torch>=2.6，太旧。
-# 统一装 2.7.1（PyPI 的 Linux 轮子带 cu126，在 12.6 / 12.8 驱动上都能跑），
-# 训练镜像本来就带 2.7.1，这里等于固定版本。
-RUN pip install --no-cache-dir torch==2.7.1 torchvision==0.22.1
+# 统一装 2.7.1。PyPI 上 Linux 的 torch 轮子自带 CUDA 12.6（依赖 nvidia-*-cu12），
+# 不是 CPU 版；装完立刻断言 torch.version.cuda，装成 CPU 版会直接构建失败。
+# 要走别的 CUDA 版本就换成官方索引：
+#   RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
+#         torch==2.7.1+cu128 torchvision==0.22.1+cu128
+RUN pip install --no-cache-dir torch==2.7.1 torchvision==0.22.1 \
+ && python -c "import torch; assert torch.version.cuda, 'CPU-only torch build'; print('torch', torch.__version__, 'cuda', torch.version.cuda)"
 
 # 项目依赖，版本跟仓库 pyproject.toml 对齐；改依赖时两处一起改。
 # 注意 av / librosa 必须是 3.11 兼容的版本（19.x 和 1.0 起要求 Python>=3.12）。
@@ -42,4 +46,5 @@ RUN pip install --no-cache-dir \
 
 # 自检：缺依赖时构建阶段就失败，而不是等到跑推理
 RUN python -c "import torch, torchvision, transformers, av, librosa, sklearn, kaggle; \
-print('torch', torch.__version__, 'torchvision', torchvision.__version__, 'transformers', transformers.__version__)"
+print('torch', torch.__version__, 'cuda', torch.version.cuda, \
+'torchvision', torchvision.__version__, 'transformers', transformers.__version__)"
