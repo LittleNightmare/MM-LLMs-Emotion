@@ -39,7 +39,7 @@
 
 ## 三、环境：自建镜像
 
-官方镜像预装 PyTorch 2.4.0 / Python 3.11，和仓库钉的 `torch 2.13.0+cu132` / Python 3.12 不一致。做法是自建一个镜像，把 `transformers` / `av` / `librosa` 这些依赖装进去，`torch` 用基础镜像自带的；文件在 [docker/](../docker/)。
+官方镜像：开发机是 CUDA 12.6 / PyTorch 2.4.0 / Python 3.11，训练任务是 CUDA 12.8 / PyTorch 2.7.1 / Python 3.11。两边 Python 都是 3.11，`av` 和 `librosa` 只能降到 18.1.0 / 0.10.2（新版要求 ≥3.12）；开发机的 torch 2.4.0 低于 `transformers 5.20.2` 要求的 2.6，镜像里统一装 2.7.1。依赖清单和 Dockerfile 在 [docker/](../docker/)。
 
 两条路都能走：
 

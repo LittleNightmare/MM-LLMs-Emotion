@@ -14,9 +14,9 @@
 
 ## 环境与安装
 
-- 实验环境：Python 3.12、PyTorch `2.13.0+cu132`、torchvision `0.28.0+cu132`、Transformers `5.20.2`，由仓库根目录 `pyproject.toml` 固定、`uv.lock` 锁定；旧版 `requirements-baseline.txt` 保留作对照。
+- 实验环境：Python 3.12、PyTorch `2.13.0+cu132`、torchvision `0.28.0+cu132`、Transformers `5.20.2`，由仓库根目录 `pyproject.toml` 固定、`uv.lock` 锁定；旧版 `requirements-baseline.txt` 保留作对照。平台镜像另走 Python 3.11 + torch 2.7.1（`docker/`），依赖版本已对齐 3.11（`av==18.1.0`、`librosa==0.10.2`）。
 - 用 uv 建环境：`uv sync` 在仓库根目录生成 `.venv`，同时装上 kaggle CLI 与 jupyterlab；国内默认走清华 PyPI 与 SJTU pytorch-wheels 镜像，换到官方源后需重新 `uv lock`。
-- 本机 GPU 为 RTX 4070 Laptop（8 GB），CUDA 版 torch 可正常 `torch.cuda.is_available()`；长训练与提交结果以 Kaggle Notebook 为准，那边自带 PyTorch。
+- 本机 GPU 为 RTX 4070 Laptop（8 GB），CUDA 版 torch 可正常 `torch.cuda.is_available()`；长训练与提交结果以 Intern Discovery 平台为准（自定义镜像，见 `docker/`）。
 - 所有命令从仓库根目录执行；本地跑脚本用 `uv run python ...`，不要往 Anaconda base 装包。
 - 推理使用 CUDA 设备 0 和 BF16，直接调用 CUDA API，没有 CPU 回退；历史测试使用单张 48GB RTX 4090。
 - `Dataset/` 已在本地就位；模型权重仍需另行准备，历史配置中的 `/workspace/...`、`/model/...` 是实验服务器路径。

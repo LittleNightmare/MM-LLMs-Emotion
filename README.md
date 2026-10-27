@@ -110,7 +110,7 @@ uv run python scripts/export_submission.py --predictions outputs/test --output s
 uv run kaggle competitions submit -c video-emotion-uncertainty-2026 -f submission.csv -m "说明"
 ```
 
-本地 `.venv` 用于冒烟测试和脚本调试；需要 GPU 的长训练和提交结果以 Kaggle Notebook 为准，那边自带 PyTorch，不必在本地装 CUDA 版。
+本地 `.venv` 用于冒烟测试和脚本调试；需要 GPU 的长训练和提交结果以 Intern Discovery 的平台为准，那边用自定义镜像（Python 3.11 + torch 2.7.1，见 [docker/](docker/)），不再装 CUDA 版 torch。
 
 ## 4. Plan
 

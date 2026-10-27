@@ -17,18 +17,27 @@
 
 ## 基础镜像怎么选
 
-优先选平台提供的 PyTorch 基础镜像，按 A100 那台机器的驱动来挑 CUDA 版本。镜像自带的 `torch` / `torchvision` 直接用，不在这里另装——`cu132` 这类新轮子要求驱动足够新，装之前先看 `nvidia-smi` 的驱动版本。
+平台现在给的基础镜像（2026-10-27 核对）：
 
-如果后面确认驱动支持 CUDA 13，可以在 Dockerfile 里再加一步升级：
+| 场景 | CUDA | PyTorch | Python |
+| --- | --- | --- | --- |
+| 开发机 | 12.6 | 2.4.0 | 3.11 |
+| 训练任务 | 12.8 | 2.7.1 | 3.11 |
+
+两边 Python 都是 3.11，所以 `av` 用 18.1.0、`librosa` 用 0.10.2——19.x 和 1.0 起要求 Python ≥ 3.12，装不上。
+
+`transformers 5.20.2` 要求 torch ≥ 2.6，开发机镜像自带的 2.4.0 太旧，所以 Dockerfile 里统一装 `torch==2.7.1`（PyPI 的 Linux 轮子带 cu126，在 12.6 和 12.8 驱动上都能跑）。训练镜像本来就是 2.7.1，这一步等于把版本钉死。
+
+要用更新的 CUDA 轮子时，在 Dockerfile 里换成显式索引：
 
 ```dockerfile
-RUN pip install --no-cache-dir torch==2.13.0+cu132 torchvision==0.28.0+cu132 \
-      --index-url https://download.pytorch.org/whl/cu132
+RUN pip install --no-cache-dir torch==2.7.1+cu128 torchvision==0.22.1+cu128 \
+      --index-url https://download.pytorch.org/whl/cu128
 ```
 
 ## 依赖清单从哪来
 
-`pip-packages.txt` 和 `Dockerfile` 里的版本跟仓库 `pyproject.toml` 对齐，改依赖时两边一起改。`torch` / `torchvision` 不在清单里，由基础镜像提供。
+`pip-packages.txt` 和 `Dockerfile` 里的版本跟仓库 `pyproject.toml` 对齐，改依赖时两边一起改。`torch` / `torchvision` 不在清单里，由基础镜像提供（开发机那档需要 2.7.1，Dockerfile 里单独装）。
 
 ## 建好之后怎么用
 
