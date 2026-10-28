@@ -152,4 +152,4 @@ uv run kaggle competitions submit -c video-emotion-uncertainty-2026 -f submissio
 - [ ] 整理训练与评测命令、模型和实验结果。
 - [ ] 完成技术报告、汇报 PPT 和演示，提交作业。
 
-实验详情见[基线实验](docs/基线实验.md)，原始记录见 [results](results/small-baselines-20261021/)，推理入口为 [scripts/baseline.py](scripts/baseline.py)。
+各项实验的设置、训练参数和汇总结果见[实验日志](docs/实验日志.md)。基线详情见[基线实验](docs/基线实验.md)，原始基线记录见 [results](results/small-baselines-20261021/)，推理入口为 [scripts/baseline.py](scripts/baseline.py)。
