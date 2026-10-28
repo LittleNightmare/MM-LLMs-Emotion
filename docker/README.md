@@ -39,6 +39,17 @@ RUN pip install --no-cache-dir torch==2.7.1+cu128 torchvision==0.22.1+cu128 \
 
 `pip-packages.txt` 和 `Dockerfile` 里的版本跟仓库 `pyproject.toml` 对齐，改依赖时两边一起改。`torch` / `torchvision` 不在清单里，由基础镜像提供（开发机那档需要 2.7.1，Dockerfile 里单独装）。
 
+## 两个镜像
+
+推理镜像（本目录 `Dockerfile`、`pip-packages.txt`）和训练镜像分开，各自一套依赖：
+
+- 推理镜像：钉死 `transformers==5.20.2`，只做 baseline/SFT/RL 的评测与提交。
+- 训练镜像：[Dockerfile.train](Dockerfile.train)、[pip-packages-train.txt](pip-packages-train.txt)，装 `ms-swift` + `decord` + `qwen_omni_utils` + `soundfile` + `tensorboard`，版本栈（transformers/trl/peft）由 ms-swift 自己解析，不与推理镜像共用 pin。
+
+训练镜像的构建与冒烟步骤见 [docs/训练镜像-ms-swift.md](../docs/训练镜像-ms-swift.md)。
+
+训练数据用 `scripts/to_swift.py` 从 `Dataset/*.jsonl` 转成 ms-swift 的 messages 格式；GRPO 奖励用 `scripts/swift_reward_plugin.py`（`--external_plugins` 注册）。
+
 ## 建好之后怎么用
 
 镜像构建成功后，新建开发机或训练任务时在「镜像」里选你的镜像即可，依赖已经就位，不用再跑 `uv sync`：

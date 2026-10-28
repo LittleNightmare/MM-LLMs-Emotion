@@ -1,0 +1,5 @@
+ms-swift
+decord
+qwen_omni_utils
+soundfile
+tensorboard

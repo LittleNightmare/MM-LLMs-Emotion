@@ -1,0 +1,35 @@
+# 训练镜像：SFT / GRPO 用 ms-swift，版本栈由它自己解析，不沿用推理镜像的 pin。
+# 平台按「资源配置 + 基础镜像」自动生成 FROM，这里只是占位。
+#
+# 场景：训练任务（NvidiaA100-1-80G）；基础镜像 CUDA 12.8 / PyTorch 2.7.1 / Python 3.11。
+#
+# 为什么单开一个 Dockerfile：推理镜像钉死 transformers==5.20.2，而 ms-swift 需要
+# 自己的 transformers/trl/peft 组合（官方推荐 transformers 5.12.x、trl 0.29、
+# peft<0.21）。两个镜像分开，推理栈不因训练依赖被改动。
+ARG BASE_IMAGE=pytorch/pytorch:2.7.1-cuda12.8-cudnn9-runtime
+FROM ${BASE_IMAGE}
+
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONUNBUFFERED=1 \
+    TOKENIZERS_PARALLELISM=false \
+    USE_AUDIO_IN_VIDEO=false
+
+# ffmpeg 给音视频兜底；git 给 swift 依赖的少数包
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ffmpeg git curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# ms-swift 会带入 transformers / trl / peft / accelerate / datasets / modelscope。
+# decord 与 qwen_omni_utils 是 Qwen2.5-Omni 读视频/音频的依赖（见官方模型表）。
+RUN pip install --no-cache-dir \
+      "ms-swift" \
+      "decord" \
+      "qwen_omni_utils" \
+      "soundfile" \
+      "tensorboard"
+
+# 自检：缺依赖时构建阶段就失败
+RUN python -c "import torch, swift, decord, soundfile; \
+print('torch', torch.__version__, 'cuda', torch.version.cuda, 'swift', swift.__version__); \
+from swift.rewards import ORM; print('reward plugin api ok')"
